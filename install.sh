@@ -302,26 +302,38 @@ detect_steam() {
 
 # ── Steam installer ───────────────────────────────────────────────────────────
 _install_steam() {
+    local launch_cmd
+
     if command -v flatpak &>/dev/null; then
-        info "Installing Steam via Flatpak..."
+        info "Installing Steam via Flatpak (recommended)..."
         run flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         run flatpak install -y flathub com.valvesoftware.Steam
-        echo
-        warn "Steam installed. You must now:"
-        warn "  1. Launch Steam:  flatpak run com.valvesoftware.Steam"
-        warn "  2. Log in to your Steam account."
-        warn "  3. Go to Settings → Compatibility"
-        warn "     Enable: 'Enable Steam Play for all other titles'"
-        warn "  4. Close Steam completely, then re-run this script."
-        exit $E_SUCCESS
+        launch_cmd="flatpak run com.valvesoftware.Steam"
+    elif command -v snap &>/dev/null; then
+        info "Installing Steam via Snap..."
+        run sudo snap install steam
+        launch_cmd="steam"
+    elif command -v apt-get &>/dev/null; then
+        info "Installing Steam via APT..."
+        run sudo apt-get install -y steam-installer
+        launch_cmd="steam"
     else
-        die "Steam not found and Flatpak is not available to install it.
-Install Steam manually for your distro:
-  Debian/Ubuntu: sudo apt-get install steam-installer
-  Arch:          sudo pacman -S steam
-  Flatpak:       https://flathub.org/apps/com.valvesoftware.Steam
+        die "Steam not found and no supported package manager (flatpak/snap/apt) is available.
+Install Steam manually:
+  Flatpak (recommended): https://flathub.org/apps/com.valvesoftware.Steam
+  Ubuntu software center: search for 'Steam'
+  Guide: https://itsfoss.com/install-steam-ubuntu-linux/
 Then re-run this script."
     fi
+
+    echo
+    warn "Steam installed. You must now:"
+    warn "  1. Launch Steam:  $launch_cmd"
+    warn "  2. Log in to your Steam account."
+    warn "  3. Go to Settings → Compatibility"
+    warn "     Enable: 'Enable Steam Play for all other titles'"
+    warn "  4. Close Steam completely, then re-run this script."
+    exit $E_SUCCESS
 }
 
 # ── Phase 0: Preflight ────────────────────────────────────────────────────────
