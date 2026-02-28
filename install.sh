@@ -267,6 +267,15 @@ detect_steam() {
         STEAM_BASE="$flatpak_path"
         PROTONTRICKS_CMD=("flatpak" "run" "com.github.Matoking.protontricks")
         STEAM_TYPE="flatpak"
+    elif flatpak list --app 2>/dev/null | grep -q "com.valvesoftware.Steam"; then
+        # Flatpak Steam installed but not yet launched — data dir doesn't exist yet
+        STEAM_BASE="$flatpak_path"
+        PROTONTRICKS_CMD=("flatpak" "run" "com.github.Matoking.protontricks")
+        STEAM_TYPE="flatpak"
+        warn "Steam (Flatpak) is installed but has never been launched."
+        warn "Please launch it now, log in, enable Steam Play, then re-run:"
+        warn "  flatpak run com.valvesoftware.Steam"
+        exit $E_SUCCESS
     elif [[ -d "$native_path1" ]]; then
         STEAM_BASE="$native_path1"
         PROTONTRICKS_CMD=("protontricks")
