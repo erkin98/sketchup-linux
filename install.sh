@@ -280,13 +280,7 @@ detect_steam() {
         PROTONTRICKS_CMD=("protontricks")
         STEAM_TYPE="snap"
     else
-        die "Steam not found. Searched:
-    Flatpak: $flatpak_path
-    Native:  $native_path1
-    Native:  $native_path2
-    Snap:    $snap_path
-
-Install Steam or set STEAM_BASE to override."
+        return 1
     fi
 
     COMPAT_TOOLS="$STEAM_BASE/compatibilitytools.d"
@@ -297,11 +291,40 @@ Install Steam or set STEAM_BASE to override."
     debug "Steam base: $STEAM_BASE"
 }
 
+# ── Steam installer ───────────────────────────────────────────────────────────
+_install_steam() {
+    if command -v flatpak &>/dev/null; then
+        info "Installing Steam via Flatpak..."
+        run flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        run flatpak install -y flathub com.valvesoftware.Steam
+        echo
+        warn "Steam installed. You must now:"
+        warn "  1. Launch Steam:  flatpak run com.valvesoftware.Steam"
+        warn "  2. Log in to your Steam account."
+        warn "  3. Go to Settings → Compatibility"
+        warn "     Enable: 'Enable Steam Play for all other titles'"
+        warn "  4. Close Steam completely, then re-run this script."
+        exit $E_SUCCESS
+    else
+        die "Steam not found and Flatpak is not available to install it.
+Install Steam manually for your distro:
+  Debian/Ubuntu: sudo apt-get install steam-installer
+  Arch:          sudo pacman -S steam
+  Flatpak:       https://flathub.org/apps/com.valvesoftware.Steam
+Then re-run this script."
+    fi
+}
+
 # ── Phase 0: Preflight ────────────────────────────────────────────────────────
 phase_preflight() {
     phase_enabled 0 || return 0
     step "Phase 0: Preflight"
 
+    # Install Steam if not found
+    if ! detect_steam 2>/dev/null; then
+        warn "Steam not found. Installing..."
+        _install_steam
+    fi
     detect_steam
     log "Steam ($STEAM_TYPE): $STEAM_BASE"
 
