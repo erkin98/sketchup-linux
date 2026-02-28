@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Lint install.sh
+        run: shellcheck install.sh
+
+      - name: Lint install-sketchup.sh (legacy)
+        run: shellcheck install-sketchup.sh
+
+  bats:
+    name: Tests (bats-core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: |
+          sudo apt-get install -y bats
+          bats --version
+
+      - name: Run tests
+        run: bats tests/install.bats
+
+  validate-bash:
+    name: Bash syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash syntax
+        run: |
+          bash -n install.sh && echo "install.sh: OK"
+          bash -n install-sketchup.sh && echo "install-sketchup.sh: OK"
